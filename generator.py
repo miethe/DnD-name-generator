@@ -92,12 +92,26 @@ class RNNLayerGenerator(Generator):
         self.race_transform = Compose([self.races, OneHot(self.races.size), ToTensor()])
         self.gender_transform = Compose([self.genders, OneHot(self.genders.size), ToTensor()])
 
-    def _init_random_input(self):
+    def _init_random_input(self, skip_random_gen=[]):
         """Helper function that initialize random letter, race and gender"""
-        letter = np.random.choice(self.vocab.start_letters)
-        race = np.random.choice(self.races.available_races)
-        gender = np.random.choice(self.genders.available_genders)
-
+        random_option = ['letter', 'race', 'gender']
+        letter = ''
+        gender = ''
+        race = ''
+        
+        if not skip_random_gen:
+            letter = np.random.choice(self.vocab.start_letters)
+            race = np.random.choice(self.races.available_races)
+            gender = np.random.choice(self.genders.available_genders)
+        else:
+            for opt in random_option:
+                if opt not in skip_random_gen:
+                    if opt is 'letter':
+                        letter = np.random.choice(self.vocab.start_letters)
+                    elif opt is 'race':
+                        race = np.random.choice(self.races.available_races)
+                    elif opt is 'gender':
+                        gender = np.random.choice(self.genders.available_genders)
         return letter, race, gender
 
     def _transform_input(self, letter, race, gender):
@@ -146,12 +160,19 @@ class RNNLayerGenerator(Generator):
             name = ''.join(map(str, outputs))
             return name
 
-    def generate(self, num_samples):
+    def generate(self, num_samples, in_race, in_gender):
         """Sample random names"""
         gen_names = []
+        ran_gen_names = []
+        if in_race is not '':
+            ran_gen_names.append('race')
+        if in_gender is not '':
+            ran_gen_names.append('gender')
+        
         for _ in range(num_samples):
-            letter, race, gender = self._init_random_input()
-
+            letter, race, gender = self._init_random_input(ran_gen_names)
+            race = race + in_race
+            gender = gender + in_gender
             gen_name = self.sample(letter, race, gender)
             gen_names.append([gen_name, race, gender])
 
@@ -163,7 +184,26 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-mp", "--model_path")
+    parser.add_argument("-race")
+    parser.add_argument("-number")
+    parser.add_argument("-gender")
     args = parser.parse_args()
 
+    if args.number:
+        number = int(args.number)
+    else:
+        number = 5
+    if args.race:
+        race = args.race
+    else:
+        race = ''
+    if args.gender:
+        gender = args.gender
+    else:
+        gender = ''
+
     dnd = RNNLayerGenerator(model_path="./models/rnn_layer_epoch_100.pt")
-    dnd.generate(5)
+    name_tuples = dnd.generate(number, race, gender)
+
+    for name_tuple in name_tuples:
+        print (name_tuple)
