@@ -24,7 +24,7 @@ class Trainer:
         - init_optimizer
     """
     def __init__(self, root_dir, hidden_size, lr, epochs, batch_size, device, logfile, verbose=1):
-        self.root_dir = root_dir
+        self.root_dir = './data'
         self.device = device
         self.verbose = verbose
         self.logfile = logfile
@@ -83,7 +83,7 @@ class RNNCellTrainer(Trainer):
     def __init__(self, root_dir,
                  hidden_size=128,
                  lr=0.0005,
-                 epochs=50,
+                 epochs=100,
                  batch_size=512,
                  device='gpu',
                  logfile='train_loss.log',
@@ -171,9 +171,9 @@ class RNNLayerTrainer(Trainer):
     def __init__(self, root_dir,
                  hidden_size=128,
                  lr=0.0005,
-                 epochs=50,
+                 epochs=100,
                  batch_size=512,
-                 device='gpu',
+                 device='cpu',
                  logfile='train_loss.log',
                  verbose=1):
         super().__init__(root_dir, hidden_size, lr, epochs, batch_size, device, logfile, verbose)
@@ -270,7 +270,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     trainer = TrainerFactory.get_trainer(trainer_type=args.type,
-                                         root_dir="./data",
+                                         root_dir='./data',
                                          epochs=args.epochs,
                                          batch_size=args.batch_size,
                                          lr=args.learning_rate,
