@@ -48,13 +48,13 @@ class RNNLayerModel(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers=1):
         super().__init__()
         self.input_size = input_size
-        self.hidden_size = hidden_size
+        self.hidden_size = hidden_size['batch_size']
         self.output_size = output_size
         self.num_layers = num_layers
 
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers)
+        self.lstm = nn.LSTM(self.input_size, self.hidden_size, self.num_layers)
         self.dropout = nn.Dropout(0.1)
-        self.dense = nn.Linear(hidden_size, output_size)
+        self.dense = nn.Linear(self.hidden_size, self.output_size)
 
     def forward(self, inputs, hx, cx, lengths):
         """
