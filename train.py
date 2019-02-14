@@ -23,19 +23,19 @@ class Trainer:
         - init_criterion
         - init_optimizer
     """
-    def __init__(self, root_dir, hidden_size, lr, epochs, batch_size, device, logfile, verbose=1):
-        self.root_dir = './data'
-        self.device = device
-        self.verbose = verbose
-        self.logfile = logfile
+    def __init__(self, args, kwargs, root_dir, hidden_size, lr, epochs, batch_size, device, logfile, verbose=1):
+        self.root_dir = kwargs['root_dir']
+        self.device = kwargs['device']
+        self.verbose = kwargs['verbose']
+        self.logfile = kwargs['logfile']
 
         # Training params
-        self.lr = lr
-        self.epochs = epochs
-        self.batch_size = batch_size
+        self.lr = kwargs['lr']
+        self.epochs = kwargs['epochs']
+        self.batch_size = kwargs['batch_size']
 
         # Model params
-        self.hidden_size = hidden_size
+        self.hidden_size = kwargs['hidden_size']
 
         # Data params
         self.vocab = Vocabulary()
@@ -50,7 +50,7 @@ class Trainer:
         self.optimizer = self.init_optimizer()
 
         # Initialize logging
-        self.logger = Logger(os.path.join(PROJECT_ROOT, logfile))
+        self.logger = Logger(os.path.join(PROJECT_ROOT, self.logfile))
 
     def init_dataset(self):
         raise NotImplementedError
@@ -80,7 +80,7 @@ class RNNCellTrainer(Trainer):
         - Initializing criterion
         - Initializing optimizer
     """
-    def __init__(self, root_dir,
+    def __init__(self, args, kwargs, root_dir='./data',
                  hidden_size=128,
                  lr=0.0005,
                  epochs=100,
@@ -88,7 +88,7 @@ class RNNCellTrainer(Trainer):
                  device='gpu',
                  logfile='train_loss.log',
                  verbose=1):
-        super().__init__(root_dir, hidden_size, lr, epochs, batch_size, device, logfile, verbose)
+        super().__init__(args, kwargs, root_dir, hidden_size, lr, epochs, batch_size, device, logfile, verbose)
 
     def init_dataset(self):
         return DnDCharacterNameDataset(root_dir=self.root_dir,
@@ -168,7 +168,7 @@ class RNNLayerTrainer(Trainer):
         - Initializing criterion
         - Initializing optimizer
     """
-    def __init__(self, root_dir,
+    def __init__(self, args, kwargs, root_dir='./data',
                  hidden_size=128,
                  lr=0.0005,
                  epochs=100,
@@ -176,7 +176,7 @@ class RNNLayerTrainer(Trainer):
                  device='cpu',
                  logfile='train_loss.log',
                  verbose=1):
-        super().__init__(root_dir, hidden_size, lr, epochs, batch_size, device, logfile, verbose)
+        super().__init__(args, kwargs, root_dir, hidden_size, lr, epochs, batch_size, device, logfile, verbose)
 
     def init_dataset(self):
         return DnDCharacterNameDataset(root_dir=self.root_dir,
@@ -209,7 +209,7 @@ class RNNLayerTrainer(Trainer):
         return RMSprop(self.model.parameters())
 
     def run_train_loop(self):
-        print("Started training!")
+        print("Started training with %s epochs!" % self.epochs)
         for epoch in range(self.epochs):
             self.optimizer.zero_grad()
 
@@ -263,7 +263,7 @@ if __name__ == '__main__':
     parser.add_argument("-bs", "--batch_size", default=128)
     parser.add_argument("-hs", "--hidden_size", default=128)
     parser.add_argument("-lr", "--learning_rate", default=0.0001)
-    parser.add_argument("-d", "--device", default="cuda", choices=["cpu", "cuda"])
+    parser.add_argument("-d", "--device", default="cpu", choices=["cpu", "cuda"])
     parser.add_argument("-t", "--type", default="layer", choices=["cell", "layer"])
     parser.add_argument("-l", "--logfile", default="train_loss.log")
     parser.add_argument("-v", "--verbose", default=1)
@@ -271,8 +271,9 @@ if __name__ == '__main__':
 
     trainer = TrainerFactory.get_trainer(trainer_type=args.type,
                                          root_dir='./data',
-                                         epochs=args.epochs,
+                                         epochs=int(args.epochs),
                                          batch_size=args.batch_size,
+                                         hidden_size=args.hidden_size,
                                          lr=args.learning_rate,
                                          device=args.device,
                                          logfile=args.logfile,
